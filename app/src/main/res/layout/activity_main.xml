@@ -193,7 +193,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
-                android:text="This app toggles the flashlight when you click the app icon.\n\nThis page is displayed when you open the app for the first time, to open this page again, long press the app icon and click the &quot;Settings&quot; option"
+                android:text="This app toggles the flashlight when you click the app icon.\n\nThis page is displayed when you open the app for the first time, to open this page again, long press the app icon and click the &quot;Settings&quot; option."
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

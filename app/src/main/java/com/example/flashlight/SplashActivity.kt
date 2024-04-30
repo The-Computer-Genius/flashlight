@@ -20,20 +20,7 @@ class SplashActivity : AppCompatActivity()
 {
 
     private lateinit var mainBinding : ActivitySplashBinding
-    /*private lateinit var camManager : CameraManager
 
-    private var _curFlashState : Boolean? = null
-    private var curFlashState : Boolean?
-        get()
-        {
-            return _curFlashState
-        }
-        set(value)
-        {
-            if(value != null)
-                updateFlashlight(value)
-            _curFlashState = value
-        }*/
 
     override fun onCreate(savedInstanceState : Bundle?)
     {
@@ -41,7 +28,6 @@ class SplashActivity : AppCompatActivity()
         //enableEdgeToEdge()
 
         mainBinding = ActivitySplashBinding.inflate(layoutInflater)
-        setContentView(mainBinding.root)
 
         if(!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
         {
@@ -57,18 +43,14 @@ class SplashActivity : AppCompatActivity()
             return
         }
 
-        if(FlashService.serviceInstance == null)
-            startService(Intent(this, FlashService::class.java))
+        //if(FlashService.serviceInstance == null)
+        //    startService(Intent(this, FlashService::class.java))
 
-        val thread = Thread {
-            while(FlashService.serviceInstance == null);
+        val fh = FlashHandler(this)
 
-            FlashService.flashState = !FlashService.flashState
+        fh.flashState = !fh.flashState
 
-            finishAndRemoveTask()
-        }
-
-        thread.start()
+        finishAndRemoveTask()
     }
 
     fun appOpenedFirstTime() : Boolean

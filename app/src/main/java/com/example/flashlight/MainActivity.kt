@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.flashlight.databinding.ActivityMainBinding
 import android.hardware.camera2.CameraManager
+import android.net.Uri
 import android.os.Build
 import android.text.SpannableString
 import android.text.Spanned
@@ -22,14 +23,21 @@ import android.text.style.ClickableSpan
 import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
 {
-    companion object {
+    companion object
+    {
         const val ABOUT_DEV_DLG : Int = 1
         const val DEV_EMAIL : String = "haraseessingh01@gmail.com"
+        const val GITHUB_LINK : String = "https://github.com/The-Computer-Genius/flashlight"
     }
+
+    private val viewModel : MainActivityVM get()
+    { return ViewModelProvider(this)[MainActivityVM::class.java] }
 
 
     private lateinit var mainBinding : ActivityMainBinding
@@ -42,60 +50,59 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(mainBinding.root)
 
-        if(!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
+        if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
         {
             Toast.makeText(this, "No flash detected", Toast.LENGTH_LONG).show()
             finishAndRemoveTask()
             return
         }
 
-        if(FlashService.serviceInstance == null)
-            startService(Intent(this, FlashService::class.java))
-
         initTextView()
 
-        val thread = Thread {
 
-            while(FlashService.serviceInstance == null);
-
-            runOnUiThread {
-                val maxFlashStrength = FlashService.getMaxFlashStrength()
-                if (maxFlashStrength == null)
-                {
-                    mainBinding.textView.visibility = View.VISIBLE
-                    mainBinding.slider.isEnabled = false
-                }
-                else
-                {
-                    mainBinding.textView.visibility = View.GONE
-                    mainBinding.slider.isEnabled = true
-
-                    mainBinding.slider.valueTo = maxFlashStrength.toFloat()
-                    val s = FlashService.getFlashStrength(this)!!
-                    mainBinding.slider.value = s.toFloat()
-                }
-
-                updateBtnText(FlashService.flashState)
-
-                mainBinding.slider.addOnChangeListener { _, fl, _ ->
-                    FlashService.setFlashStrength(this, fl.toInt())
-                }
-
-                mainBinding.flashStateBtn.setOnClickListener {
-                    val newState = !FlashService.flashState
-                    FlashService.flashState = newState
-                    updateBtnText(newState)
-                }
-
-                startReadingFlashState()
-            }
+        val maxFlashStrength = viewModel.fh.getMaxFlashStrength()
+        if (maxFlashStrength == null)
+        {
+            mainBinding.textView.visibility = View.VISIBLE
+            mainBinding.slider.isEnabled = false
         }
-        thread.start()
+        else
+        {
+            mainBinding.textView.visibility = View.GONE
+            mainBinding.slider.isEnabled = true
 
+            mainBinding.slider.valueTo = maxFlashStrength.toFloat()
+            val s = viewModel.fh.getFlashStrength(this)!!
+            mainBinding.slider.value = s.toFloat()
+        }
+
+        updateBtnText(viewModel.fh.flashState)
+
+        mainBinding.slider.addOnChangeListener { _, fl, _ ->
+            viewModel.fh.setFlashStrength(this, fl.toInt())
+        }
+
+        mainBinding.flashStateBtn.setOnClickListener {
+            val newState = !viewModel.fh.flashState
+            viewModel.fh.flashState = newState
+            updateBtnText(newState)
+        }
+
+        startReadingFlashState()
+
+
+    }
+
+    override fun onStop()
+    {
+        super.onStop()
+        //viewModel.fh.flashState = false
+        //finishAndRemoveTask()
     }
 
     override fun onDestroy()
     {
+        //finishAndRemoveTask()
         super.onDestroy()
         stopReadingFlashState = true
     }
@@ -104,23 +111,30 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
     private fun startReadingFlashState()
     {
         val thread = Thread {
-            var flashStateStart = FlashService.flashState
-            while(true)
+            var flashStateStart = viewModel.fh.flashState
+            while (true)
             {
-                if(stopReadingFlashState)break
-                if(FlashService.flashState != flashStateStart)
+                if (stopReadingFlashState) break
+                if (viewModel.fh.flashState != flashStateStart)
                 {
-                    runOnUiThread { updateBtnText(FlashService.flashState) }
-                    flashStateStart = FlashService.flashState
+                    runOnUiThread { updateBtnText(viewModel.fh.flashState) }
+                    flashStateStart = viewModel.fh.flashState
                 }
             }
         }
         thread.start()
     }
 
+    private fun openGitHub()
+    {
+        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_LINK))
+        startActivity(browserIntent)
+    }
+
     private fun initTextView()
     {
-        val ss = SpannableString("The Flashlight Project developed by Harasees Singh is free and open source, which means you can view it's source code on GitHub.")
+        val ss =
+                SpannableString("The Flashlight Project developed by Harasees Singh is free and open source, which means you can view it's source code on GitHub.")
         val clickableSpan : ClickableSpan = object : ClickableSpan()
         {
             override fun onClick(textView : View)
@@ -141,11 +155,13 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
         textView.text = ss
         textView.movementMethod = LinkMovementMethod.getInstance()
         textView.highlightColor = Color.TRANSPARENT
+
+        mainBinding.textViewOpenSourceCode.setOnClickListener { openGitHub() }
     }
 
     fun updateBtnText(newState : Boolean)
     {
-        if(newState)
+        if (newState)
             mainBinding.flashStateBtn.text = "Turn off"
         else
             mainBinding.flashStateBtn.text = "Turn on"
@@ -162,11 +178,11 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
         dlg.show(supportFragmentManager, ABOUT_DEV_DLG.toString())
     }
 
-    fun getColorFromTheme(context: Context, color : Int) : Int
+    fun getColorFromTheme(context : Context, color : Int) : Int
     {
         val typedValue = TypedValue()
 
-        val a: TypedArray =
+        val a : TypedArray =
                 context.obtainStyledAttributes(typedValue.data, intArrayOf(color))
         val retrievedColor = a.getColor(0, 0)
         a.recycle()
@@ -188,10 +204,10 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
 
     override fun onClickSimpleAlertNegativeBtn(dlg : SimpleAlertDlg, dlgUniqueID : Int)
     {
-        if(dlgUniqueID == ABOUT_DEV_DLG)
+        if (dlgUniqueID == ABOUT_DEV_DLG)
         {
             copyTextToClipboard(this, DEV_EMAIL)
-            if(Build.VERSION.SDK_INT <= 32)
+            if (Build.VERSION.SDK_INT <= 32)
                 Toast.makeText(this, "Email copied", Toast.LENGTH_LONG).show()
         }
     }
