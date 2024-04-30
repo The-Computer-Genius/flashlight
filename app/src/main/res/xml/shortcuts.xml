@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="openSettingsShortcut"
+        android:enabled="true"
+        android:icon="@drawable/settings_24"
+
+        android:shortcutShortLabel="@string/settings">
+        <intent
+            android:action="com.example.lockscreen.OPEN_SETTINGS"
+            android:targetPackage="com.harasees.flashlight"
+            android:targetClass="com.example.flashlight.MainActivity" />
+    </shortcut>
+
+</shortcuts>
