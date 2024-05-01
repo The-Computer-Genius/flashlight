@@ -4,15 +4,13 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.TypedArray
 import android.graphics.Color
-import android.hardware.camera2.CameraAccessException
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.flashlight.databinding.ActivityMainBinding
-import android.hardware.camera2.CameraManager
 import android.net.Uri
 import android.os.Build
 import android.text.SpannableString
@@ -23,9 +21,6 @@ import android.text.style.ClickableSpan
 import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModelProvider
-import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
 {
@@ -36,8 +31,7 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
         const val GITHUB_LINK : String = "https://github.com/The-Computer-Genius/flashlight"
     }
 
-    private val viewModel : MainActivityVM get()
-    { return ViewModelProvider(this)[MainActivityVM::class.java] }
+    private lateinit var fh : FlashHandler
 
 
     private lateinit var mainBinding : ActivityMainBinding
@@ -45,10 +39,10 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
     override fun onCreate(savedInstanceState : Bundle?)
     {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
 
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(mainBinding.root)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         if (!packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
         {
@@ -59,8 +53,9 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
 
         initTextView()
 
+        fh = FlashHandler(this)
 
-        val maxFlashStrength = viewModel.fh.getMaxFlashStrength()
+        val maxFlashStrength = fh.getMaxFlashStrength()
         if (maxFlashStrength == null)
         {
             mainBinding.textView.visibility = View.VISIBLE
@@ -72,19 +67,19 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
             mainBinding.slider.isEnabled = true
 
             mainBinding.slider.valueTo = maxFlashStrength.toFloat()
-            val s = viewModel.fh.getFlashStrength(this)!!
+            val s = fh.getFlashStrength(this)!!
             mainBinding.slider.value = s.toFloat()
         }
 
-        updateBtnText(viewModel.fh.flashState)
+        updateBtnText(fh.flashState)
 
         mainBinding.slider.addOnChangeListener { _, fl, _ ->
-            viewModel.fh.setFlashStrength(this, fl.toInt())
+            fh.setFlashStrength(this, fl.toInt())
         }
 
         mainBinding.flashStateBtn.setOnClickListener {
-            val newState = !viewModel.fh.flashState
-            viewModel.fh.flashState = newState
+            val newState = !fh.flashState
+            fh.flashState = newState
             updateBtnText(newState)
         }
 
@@ -93,16 +88,8 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
 
     }
 
-    override fun onStop()
-    {
-        super.onStop()
-        //viewModel.fh.flashState = false
-        //finishAndRemoveTask()
-    }
-
     override fun onDestroy()
     {
-        //finishAndRemoveTask()
         super.onDestroy()
         stopReadingFlashState = true
     }
@@ -111,14 +98,14 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
     private fun startReadingFlashState()
     {
         val thread = Thread {
-            var flashStateStart = viewModel.fh.flashState
+            var flashStateStart = fh.flashState
             while (true)
             {
                 if (stopReadingFlashState) break
-                if (viewModel.fh.flashState != flashStateStart)
+                if (fh.flashState != flashStateStart)
                 {
-                    runOnUiThread { updateBtnText(viewModel.fh.flashState) }
-                    flashStateStart = viewModel.fh.flashState
+                    runOnUiThread { updateBtnText(fh.flashState) }
+                    flashStateStart = fh.flashState
                 }
             }
         }
