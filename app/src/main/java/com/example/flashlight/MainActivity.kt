@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
     private fun initTextView()
     {
         val ss =
-                SpannableString("The Flashlight Project developed by Harasees Singh is free and open source, which means you can view it's source code on GitHub.")
+                SpannableString("The Torch Project developed by Harasees Singh is free and open source, which means you can view it's source code on GitHub.")
         val clickableSpan : ClickableSpan = object : ClickableSpan()
         {
             override fun onClick(textView : View)
@@ -136,7 +136,7 @@ class MainActivity : AppCompatActivity(), SimpleAlertDlg.OnClickListener
                 ds.isUnderlineText = false
             }
         }
-        ss.setSpan(clickableSpan, 36, 50, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        ss.setSpan(clickableSpan, 31, 45, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         val textView = mainBinding.textViewOpenSourceInfo
         textView.text = ss

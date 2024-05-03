@@ -3,17 +3,9 @@ package com.example.flashlight
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraManager
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.example.flashlight.databinding.ActivitySplashBinding
 
 class SplashActivity : AppCompatActivity()

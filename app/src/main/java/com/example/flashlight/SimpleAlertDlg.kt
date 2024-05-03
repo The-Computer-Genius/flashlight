@@ -2,7 +2,6 @@ package com.example.flashlight
 
 import android.app.Dialog
 import android.os.Bundle
-import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
